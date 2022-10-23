@@ -1,4 +1,3 @@
-# sort NI and SI
 echo "Downloading new stats"
 curl https://raw.githubusercontent.com/minhealthnz/nz-covid-data/main/cases/covid-cases.csv -o covid-cases.csv
 curl https://raw.githubusercontent.com/minhealthnz/nz-covid-data/main/cases/covid-case-counts.csv -o covid-case-counts.csv
@@ -7,7 +6,7 @@ grep -f nidhb.txt covid-cases.csv >nidhb.csv
 grep -f sidhb.txt covid-cases.csv >sidhb.csv
 grep -f wellydhb.txt covid-cases.csv >wellydhb.csv
 grep -f aucklanddhb.txt covid-cases.csv >aucklanddhb.csv
-grep -f borderdhb.txt covid-case-counts.csv >borderdhb.csv
+grep -f chchdhb.txt covid-cases.csv >chchdhb.csv
 #this isn't catching all the reinfections, as the count can be >1 per line
 grep -f reinfectiondhb.txt covid-case-counts.csv >reinfection.csv
 #cat aucklanddhb.csv | sort | awk -F "," '{ print $1 }' >aucklanddates
@@ -33,18 +32,24 @@ cat sidhb.csv | sort | awk -F "," '{ print $1 }' >sidates
 cat sidates | uniq | xargs -I DA grep -c DA sidates >sinumbers
 cat sidates | sort | uniq >sidates2
 paste -d "," sidates2 sinumbers  >si-covid.csv
+echo "Doing chch"
+cat chchdhb.csv | sort | awk -F "," '{ print $1 }' >chchdates
+cat chchdates | uniq | xargs -I DA grep -c DA chchdates >chchnumbers
+cat chchdates | sort | uniq >chchdates2
+paste -d "," chchdates2 chchnumbers  >chch-covid.csv
 echo "Doing all of NZ"
 cat covid-cases.csv | sort | awk -F "," '{ print $1 }' >nzdates
 cat nzdates | uniq | xargs -I DA grep -c DA nzdates >nznumbers
 cat nzdates | sort | uniq >nzdates2
 paste -d "," nzdates2 nznumbers | grep -v "Report" >nz-covid.csv
-echo "Doing border"
-cat borderdhb.csv | sort | awk -F "," '{ print $1 }' >borderdates
-cat borderdates | uniq | xargs -I DA grep -c DA borderdates >bordernumbers
-cat borderdates | sort | uniq >borderdates2
-paste -d "," borderdates2 bordernumbers | grep -v "Report" >border-covid.csv
-TODAY=$(date +%F --date="1 day ago")
-cat borderdhb.csv  | grep $TODAY | awk -F "," '{ sum+=$8;} END{print sum;}'
+#MOH isn't counting border cases anymore
+#echo "Doing border" 
+#cat borderdhb.csv | sort | awk -F "," '{ print $1 }' >borderdates
+#cat borderdates | uniq | xargs -I DA grep -c DA borderdates >bordernumbers
+#cat borderdates | sort | uniq >borderdates2
+#paste -d "," borderdates2 bordernumbers | grep -v "Report" >border-covid.csv
+#TODAY=$(date +%F --date="1 day ago")
+#cat borderdhb.csv  | grep $TODAY | awk -F "," '{ sum+=$8;} END{print sum;}'
 echo "Doing reinfections"
 #cat reinfection.csv  | sort | awk -F "," '{ print $1 }' | xargs -I DA grep -c DA | awk -F "," '{ sum+=$8;} END{print sum;}'
 cat reinfection.csv | sort | awk -F "," '{ print $1 }' >reinfectiondates
@@ -54,4 +59,3 @@ paste -d "," reinfectiondates2 reinfectionnumbers | grep -v "Report" >reinfectio
 echo "Todays reinfections:"
 TODAY=$(date +%F --date="1 day ago")
 cat reinfection.csv  | grep $TODAY | awk -F "," '{ sum+=$8;} END{print sum;}'
-
