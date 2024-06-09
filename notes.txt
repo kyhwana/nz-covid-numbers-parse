@@ -1,0 +1,3 @@
+notes:
+2024-06-03,Confirmed,Male,90+,MidCentral,,First,1
+date,status,sex,age,CHDB,??,first or reinfection,number

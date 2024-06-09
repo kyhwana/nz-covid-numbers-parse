@@ -1,0 +1,72 @@
+import pandas as pd 
+import matplotlib.pyplot as plt
+
+#total stats per day per dhb
+#last 90 days per dhb
+#national total per day
+#7 day rolling average national
+#7 day rolling average per dhb
+#add esr wastewater
+#add esr variant type
+#Report Date     Sex Age group               District Overseas travel Infection status  Number of cases reported
+#Case Status
+casesfile = pd.read_csv("covid-case-counts.csv", header=0)
+pd.set_option('display.max_rows', None)
+#print(casesfile)
+#list of CDHBS At the border, "District"
+dhbs = ['Auckland', 'Bay of Plenty Canterbury/West Coast', 'Capital & Coast/Hutt', 'Counties Manukau', 'Hawke\'s Bay', 'Lakes', 'MidCentral','Nelson Marlborough','Northland','South Canterbury','Southern','Tairawhiti','Taranaki','Unknown','Waikato','Wairarapa','Waitemata','Whanganui']
+#print(casesfile.columns)
+##print(casesfile["Report Date"])
+#print(casesfile["District"]["Number of cases reported"])
+
+uniqueddates = casesfile['Report Date'].unique()
+#print(casesfile)
+def national_total_per_day(casescsv):
+    for day in uniqueddates:
+            daycount = 0 #reset this for each unique day
+            #returnedrows = casescsv[casescsv["Report Date"] == day]
+            #print("numberofcases", returnedrows["Number of cases reported"])
+            #daycount = daycount + returnedrows["Number of cases reported"]
+            #print("daycount", daycount)
+            #print("day ", day, "count ", daycount)
+
+def cmstoinches(cm):
+      #fuck this inches bullshit
+      return(cm*2.54) #fuck you inches
+
+#national_total_per_day(casesfile)
+def allnationalcases(incases):
+    totalnationalcases = getdailytotals(incases)
+    print(totalnationalcases)
+    tncplot = getdailytotals(totalnationalcases)
+    makegraph(tncplot,"alltimecases.jpg")
+
+def getdailytotals(incases): #take in a full column dataform and return just date,datetotal
+     totaldailycases = casesfile.groupby("Report Date")["Number of cases reported"].sum()
+     return totaldailycases
+
+def getsevendayavg(incases): #moving seven day average of "Number of cases reported" input, but totals!
+    sevendayavg = incases.rolling(7).mean()
+    print(sevendayavg)
+    return sevendayavg
+
+def makegraph(incases, filename): #pass in a final dataform and output the filename graph
+     plotter = incases.plot(figsize=(cmstoinches(20),cmstoinches(10)))
+     plotter.set_ylim(ymin=0) #so the bottom of the graph starts at 0
+     plotter.figure.savefig(filename)
+
+def getdistrict(incases, district): #return a dataframe of just "district" numbers. (unfiltered)
+    #we assume the district exists
+    districtdf = incases[incases["District"] == district]
+    return districtdf
+
+     
+
+allnationalcases(casesfile)
+sevendayavg = getsevendayavg(casesfile.groupby("Report Date")["Number of cases reported"].sum())
+totalnationalcases = casesfile.groupby("Report Date")["Number of cases reported"].sum()
+nationalcasesandsevendayavg = pd.merge(totalnationalcases,sevendayavg, on="Report Date")
+print(nationalcasesandsevendayavg)
+natsevengdayavgplot = nationalcasesandsevendayavg
+makegraph(nationalcasesandsevendayavg, "allnationaltotals.jpg")
+print(getdistrict(casesfile,"Auckland"))
