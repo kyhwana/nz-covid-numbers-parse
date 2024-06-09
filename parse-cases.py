@@ -1,5 +1,6 @@
 import pandas as pd 
 import matplotlib.pyplot as plt
+import re #oh boy it's time for regexes
 
 #total stats per day per dhb
 #last 90 days per dhb
@@ -14,11 +15,11 @@ casesfile = pd.read_csv("covid-case-counts.csv", header=0)
 pd.set_option('display.max_rows', None)
 #print(casesfile)
 #list of CDHBS At the border, "District"
-dhbs = ['Auckland', 'Bay of Plenty Canterbury/West Coast', 'Capital & Coast/Hutt', 'Counties Manukau', 'Hawke\'s Bay', 'Lakes', 'MidCentral','Nelson Marlborough','Northland','South Canterbury','Southern','Tairawhiti','Taranaki','Unknown','Waikato','Wairarapa','Waitemata','Whanganui']
+dhbs = ['Auckland', 'Bay of Plenty', 'Canterbury/West Coast', 'Capital & Coast/Hutt', 'Counties Manukau', 'Hawke\'s Bay', 'Lakes', 'MidCentral','Nelson Marlborough','Northland','South Canterbury','Southern','Tairawhiti','Taranaki','Unknown','Waikato','Wairarapa','Waitemata','Whanganui']
 #print(casesfile.columns)
 ##print(casesfile["Report Date"])
 #print(casesfile["District"]["Number of cases reported"])
-
+imagesdir = "images/"
 uniqueddates = casesfile['Report Date'].unique()
 #print(casesfile)
 def national_total_per_day(casescsv):
@@ -38,11 +39,10 @@ def cmstoinches(cm):
 def allnationalcases(incases):
     totalnationalcases = getdailytotals(incases)
     print(totalnationalcases)
-    tncplot = getdailytotals(totalnationalcases)
-    makegraph(tncplot,"alltimecases.jpg")
+    makegraph(totalnationalcases,"alltimecases.jpg")
 
 def getdailytotals(incases): #take in a full column dataform and return just date,datetotal
-     totaldailycases = casesfile.groupby("Report Date")["Number of cases reported"].sum()
+     totaldailycases = incases.groupby("Report Date")["Number of cases reported"].sum()
      return totaldailycases
 
 def getsevendayavg(incases): #moving seven day average of "Number of cases reported" input, but totals!
@@ -54,13 +54,30 @@ def makegraph(incases, filename): #pass in a final dataform and output the filen
      plotter = incases.plot(figsize=(cmstoinches(20),cmstoinches(10)))
      plotter.set_ylim(ymin=0) #so the bottom of the graph starts at 0
      plotter.figure.savefig(filename)
+     plt.close("all")
 
 def getdistrict(incases, district): #return a dataframe of just "district" numbers. (unfiltered)
     #we assume the district exists
     districtdf = incases[incases["District"] == district]
     return districtdf
 
-     
+def runalldistricts(incases, days=None): #graph all district totals since forever
+    for districtin in dhbs:
+        districtdf = getdistrict(incases,districtin)
+        districtdfdaily = getdailytotals(districtdf)
+        districtdfseven = getsevendayavg(districtdfdaily)
+        
+        if days is None: #oop
+            graphfilename = imagesdir + re.sub("[^A-Za-z]", "", districtin) + "totals.jpg" #hnngggh, dhbs have bad filename/path characters
+            districtdftotals = pd.merge(districtdfdaily,districtdfseven, on="Report Date")
+        else:
+            graphfilename = imagesdir + re.sub("[^A-Za-z]", "", districtin) + "-" + str(days) + "-" + "totals.jpg" #hnngggh, dhbs have bad filename/path characters     
+            districtdftotals = pd.merge(getlastxdays(districtdfdaily,days),getlastxdays(districtdfseven,days), on="Report Date") #ew
+        
+        makegraph(districtdftotals,graphfilename)
+
+def getlastxdays(incases, days): #get the last x days of numbers, useful as testing % has fallen off. Remember to get sumed data.
+     return(incases.tail(days))
 
 allnationalcases(casesfile)
 sevendayavg = getsevendayavg(casesfile.groupby("Report Date")["Number of cases reported"].sum())
@@ -69,4 +86,10 @@ nationalcasesandsevendayavg = pd.merge(totalnationalcases,sevendayavg, on="Repor
 print(nationalcasesandsevendayavg)
 natsevengdayavgplot = nationalcasesandsevendayavg
 makegraph(nationalcasesandsevendayavg, "allnationaltotals.jpg")
-print(getdistrict(casesfile,"Auckland"))
+
+runalldistricts(casesfile)
+runalldistricts(casesfile, 90)
+runalldistricts(casesfile, 180)
+runalldistricts(casesfile, 365)
+
+
