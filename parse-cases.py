@@ -11,6 +11,8 @@ import re #oh boy it's time for regexes
 #add esr variant type
 #Report Date     Sex Age group               District Overseas travel Infection status  Number of cases reported
 #Case Status
+#infection number: First, Reinfection (< 90 days), Reinfection
+
 casesfile = pd.read_csv("covid-case-counts.csv", header=0)
 pd.set_option('display.max_rows', None)
 #print(casesfile)
@@ -44,6 +46,11 @@ def allnationalcases(incases):
 def getdailytotals(incases): #take in a full column dataform and return just date,datetotal
      totaldailycases = incases.groupby("Report Date")["Number of cases reported"].sum()
      return totaldailycases
+
+def getinfectionstatusdailytotals(incases,status): #take in a full column dataform and return just date,datetotal
+     totaldailycases = incases.groupby(["Report Date", "Infection status"]).sum()
+     return(totaldailycases)
+     
 
 def getsevendayavg(incases): #moving seven day average of "Number of cases reported" input, but totals!
     sevendayavg = incases.rolling(7).mean()
@@ -87,9 +94,12 @@ print(nationalcasesandsevendayavg)
 natsevengdayavgplot = nationalcasesandsevendayavg
 makegraph(nationalcasesandsevendayavg, "allnationaltotals.jpg")
 
-runalldistricts(casesfile)
-runalldistricts(casesfile, 90)
-runalldistricts(casesfile, 180)
-runalldistricts(casesfile, 365)
+#runalldistricts(casesfile)
+#runalldistricts(casesfile, 90)
+#runalldistricts(casesfile, 180)
+#runalldistricts(casesfile, 365)
+
+reinfectionstuff = getinfectionstatusdailytotals(casesfile,"First")
+print(reinfectionstuff["Number of cases reported"])
 
 
