@@ -94,10 +94,10 @@ print(nationalcasesandsevendayavg)
 natsevengdayavgplot = nationalcasesandsevendayavg
 makegraph(nationalcasesandsevendayavg, "allnationaltotals.jpg")
 
-#runalldistricts(casesfile)
-#runalldistricts(casesfile, 90)
-#runalldistricts(casesfile, 180)
-#runalldistricts(casesfile, 365)
+runalldistricts(casesfile)
+runalldistricts(casesfile, 90)
+runalldistricts(casesfile, 180)
+runalldistricts(casesfile, 365)
 
 reinfectionstuff = getinfectionstatusdailytotals(casesfile,"First")
 print(reinfectionstuff["Number of cases reported"])
